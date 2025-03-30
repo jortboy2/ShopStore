@@ -1,9 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import {
-  createBrowserRouter,
-  RouterProvider,
-} from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import RootLayout from "./components/layout/RootLayout.jsx"; // Importing the RootLayout component
 import AdminLayout from "./components/admin/layout/AdminLayout.jsx"; // Importing the AdminLayout component
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
@@ -12,7 +9,8 @@ import Home from "./page/Home.jsx";
 import Dashboard from "./components/Admin/Dashboard.jsx"; // Importing the Dashboard component
 import Categories from "./components/Admin/Categories/Categories.jsx";
 import { SnackbarProvider } from "notistack";
-
+import About from "./page/About.jsx";
+import Product from "./components/Admin/Product/Product.jsx";
 const router = createBrowserRouter([
   // Public routes with RootLayout
   {
@@ -24,7 +22,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/about",
-        element: <div>About Page</div>,
+        element: <About />,
       },
       {
         path: "/contact",
@@ -47,7 +45,7 @@ const router = createBrowserRouter([
       },
       {
         path: "products",
-        element: <div>Quản lý sản phẩm</div>,
+        element: <Product />,
       },
       {
         path: "users",

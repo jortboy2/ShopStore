@@ -229,7 +229,7 @@ const Home = () => {
                   className="group relative overflow-hidden rounded-lg"
                 >
                   <img
-                    src={category.image || 'https://placehold.co/300x200'}
+                    src={`http://localhost:5000/uploads/categories/${category.image}`}
                     alt={category.name}
                     className="w-full h-64 object-cover bg-center transition-transform duration-300 group-hover:scale-110"
                   />
