@@ -2,9 +2,36 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaArrowRight, FaShoppingBag, FaTruck, FaHeadset, FaShieldAlt, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import axios from 'axios';
 
 const Home = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Define features array
+  const features = [
+    {
+      icon: <FaShoppingBag className="text-4xl" />,
+      title: 'Miễn Phí Vận Chuyển',
+      description: 'Giao hàng miễn phí cho đơn hàng trên 500.000đ',
+    },
+    {
+      icon: <FaTruck className="text-4xl" />,
+      title: 'Giao Hàng Nhanh',
+      description: 'Giao hàng trong vòng 24 giờ',
+    },
+    {
+      icon: <FaHeadset className="text-4xl" />,
+      title: 'Hỗ Trợ Khách Hàng',
+      description: 'Đội ngũ hỗ trợ 24/7',
+    },
+    {
+      icon: <FaShieldAlt className="text-4xl" />,
+      title: 'Bảo Mật Thanh Toán',
+      description: 'Thanh toán an toàn và bảo mật',
+    },
+  ];
 
   // Tự động chuyển slide
   useEffect(() => {
@@ -13,6 +40,25 @@ const Home = () => {
     }, 5000); // Chuyển slide mỗi 5 giây
 
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/categories`);
+        // Lọc lấy 4 danh mục được hiển thị trên trang chủ
+        const homeCategories = response.data.data
+          .filter(category => category.isShowHome && category.isActive)
+          .slice(0, 4);
+        setCategories(homeCategories);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
   }, []);
 
   // Xử lý chuyển slide thủ công
@@ -96,56 +142,6 @@ const Home = () => {
     }
   ];
 
-  const categories = [
-    {
-      id: 1,
-      name: 'Nam',
-      image: 'https://images.unsplash.com/photo-1610384104075-e05c8cf200c3?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZmFzaGlvbiUyMG1lbnxlbnwwfHwwfHx8MA%3D%3D',
-      count: '120+ Sản Phẩm'
-    },
-    {
-      id: 2,
-      name: 'Nữ',
-      image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8ZmFzaGlvbiUyMHdvbWFufGVufDB8fDB8fHww',
-      count: '150+ Sản Phẩm'
-    },
-    {
-      id: 3,
-      name: 'Trẻ Em',
-      image: 'https://plus.unsplash.com/premium_photo-1697612944142-01067d84308d?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8ZmFzaGlvbiUyMGtpZHxlbnwwfHwwfHx8MA%3D%3D',
-      count: '80+ Sản Phẩm'
-    },
-    {
-      id: 4,
-      name: 'Phụ Kiện',
-      image: 'https://images.unsplash.com/photo-1559563458-527698bf5295?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8ZmFzaGlvbiUyMGFjY2Vzc29yaWVzfGVufDB8fDB8fHww',
-      count: '200+ Sản Phẩm'
-    }
-  ];
-
-  const features = [
-    {
-      icon: <FaShoppingBag className="text-3xl" />,
-      title: 'Miễn Phí Vận Chuyển',
-      description: 'Cho đơn hàng trên 500.000đ'
-    },
-    {
-      icon: <FaTruck className="text-3xl" />,
-      title: 'Giao Hàng Nhanh',
-      description: '2-3 ngày làm việc'
-    },
-    {
-      icon: <FaHeadset className="text-3xl" />,
-      title: 'Hỗ Trợ 24/7',
-      description: 'Luôn sẵn sàng hỗ trợ'
-    },
-    {
-      icon: <FaShieldAlt className="text-3xl" />,
-      title: 'Thanh Toán An Toàn',
-      description: '100% bảo mật'
-    }
-  ];
-
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -220,25 +216,31 @@ const Home = () => {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">Mua Sắm Theo Danh Mục</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {categories.map((category) => (
-              <Link
-                key={category.id}
-                to={`/products?category=${category.name.toLowerCase()}`}
-                className="group relative overflow-hidden rounded-lg"
-              >
-                <img
-                  src={category.image}
-                  alt={category.name}
-                  className="w-full h-64 object-cover bg-center transition-transform duration-300 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-black/60 bg-opacity-40 flex flex-col items-center justify-center text-white">
-                  <h3 className="text-2xl font-bold mb-2">{category.name}</h3>
-                  <p className="text-sm">{category.count}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
+          {loading ? (
+            <div className="mt-12 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {categories.map((category) => (
+                <Link
+                  key={category._id}
+                  to={`/products?category=${category.slug}`}
+                  className="group relative overflow-hidden rounded-lg"
+                >
+                  <img
+                    src={category.image || 'https://placehold.co/300x200'}
+                    alt={category.name}
+                    className="w-full h-64 object-cover bg-center transition-transform duration-300 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-black/60 bg-opacity-40 flex flex-col items-center justify-center text-white">
+                    <h3 className="text-2xl font-bold mb-2">{category.name}</h3>
+                    <p className="text-sm">{category.description}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

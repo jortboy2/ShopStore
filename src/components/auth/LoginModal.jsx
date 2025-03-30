@@ -254,13 +254,8 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label className="ml-2 block text-sm text-gray-700">
-                    Ghi nhớ đăng nhập
-                  </label>
+                 
+                  
                 </div>
                 <button
                   type="button"
