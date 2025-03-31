@@ -25,6 +25,7 @@ const Product = () => {
     isNew: false,
     isBestSeller: false,
     discount: 0,
+    gender: "Unisex",
   });
 
   const { enqueueSnackbar } = useSnackbar();
@@ -37,7 +38,24 @@ const Product = () => {
           axios.get(`${import.meta.env.VITE_API_URL}/products`),
           axios.get(`${import.meta.env.VITE_API_URL}/categories`),
         ]);
-        setProducts(productsRes.data.data);
+
+        // Fetch category details for each product
+        const productsWithCategories = await Promise.all(
+          productsRes.data.data.map(async (product) => {
+            if (product.category) {
+              const categoryRes = await axios.get(
+                `${import.meta.env.VITE_API_URL}/categories/${product.category}`
+              );
+              return {
+                ...product,
+                category: categoryRes.data.data,
+              };
+            }
+            return product;
+          })
+        );
+
+        setProducts(productsWithCategories);
         setCategories(categoriesRes.data.data);
       } catch (error) {
         enqueueSnackbar("Lỗi khi tải dữ liệu", { variant: "error" });
@@ -91,37 +109,47 @@ const Product = () => {
     e.preventDefault();
     try {
       const formDataToSend = new FormData();
-      
-      // Thêm các trường dữ liệu vào formData
-      Object.keys(formData).forEach(key => {
-        if (key === 'images') {
-          // Xử lý mảng ảnh
-          formData.images.forEach((image, index) => {
-            formDataToSend.append(`images[${index}]`, image);
-          });
-        } else if (key === 'sizes' || key === 'colors') {
-          // Xử lý mảng sizes và colors
-          formDataToSend.append(key, JSON.stringify(formData[key]));
-        } else {
-          // Xử lý các trường khác
-          formDataToSend.append(key, formData[key]);
-        }
+      const token = localStorage.getItem("token");
+
+      // Add basic fields
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("description", formData.description);
+      formDataToSend.append("price", formData.price);
+      formDataToSend.append("category", formData.category);
+      formDataToSend.append("stock", formData.stock);
+      formDataToSend.append("isActive", formData.isActive);
+      formDataToSend.append("isNew", formData.isNew);
+      formDataToSend.append("isBestSeller", formData.isBestSeller);
+      formDataToSend.append("discount", formData.discount);
+      formDataToSend.append("gender", formData.gender);
+
+      // Add arrays as JSON strings
+      formDataToSend.append("sizes", JSON.stringify(formData.sizes));
+      formDataToSend.append("colors", JSON.stringify(formData.colors));
+
+      // Add existing images if editing and no new images selected
+      if (editingProduct && selectedImages.length === 0) {
+        formDataToSend.append(
+          "existingImages",
+          JSON.stringify(formData.images)
+        );
+      }
+
+      // Add new images
+      selectedImages.forEach((file) => {
+        formDataToSend.append("images", file);
       });
 
-      // Thêm các ảnh mới được chọn
-      selectedImages.forEach((file, index) => {
-        formDataToSend.append(`images[${formData.images.length + index}]`, file);
-      });
-
-      // Gửi request tạo/cập nhật sản phẩm
+      // Send request
       if (editingProduct) {
         await axios.put(
           `${import.meta.env.VITE_API_URL}/products/${editingProduct._id}`,
           formDataToSend,
           {
             headers: {
-              'Content-Type': 'multipart/form-data'
-            }
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
           }
         );
         enqueueSnackbar("Cập nhật sản phẩm thành công", { variant: "success" });
@@ -131,8 +159,9 @@ const Product = () => {
           formDataToSend,
           {
             headers: {
-              'Content-Type': 'multipart/form-data'
-            }
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
           }
         );
         enqueueSnackbar("Tạo sản phẩm thành công", { variant: "success" });
@@ -154,12 +183,30 @@ const Product = () => {
         isNew: false,
         isBestSeller: false,
         discount: 0,
+        gender: "Unisex",
       });
 
-      // Refresh products list
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/products`);
-      setProducts(response.data.data);
+      // Refresh products list with categories
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/products`
+      );
+      const productsWithCategories = await Promise.all(
+        response.data.data.map(async (product) => {
+          if (product.category) {
+            const categoryRes = await axios.get(
+              `${import.meta.env.VITE_API_URL}/categories/${product.category}`
+            );
+            return {
+              ...product,
+              category: categoryRes.data.data,
+            };
+          }
+          return product;
+        })
+      );
+      setProducts(productsWithCategories);
     } catch (error) {
+      console.error("Error submitting product:", error);
       enqueueSnackbar(error.response?.data?.message || "Lỗi khi lưu sản phẩm", {
         variant: "error",
       });
@@ -169,15 +216,35 @@ const Product = () => {
   // Handle edit product
   const handleEdit = (product) => {
     setEditingProduct(product);
-    setFormData(product);
+    setFormData({
+      name: product.name || "",
+      description: product.description || "",
+      price: product.price || "",
+      category: product.category?._id || "",
+      sizes: Array.isArray(product.sizes) ? product.sizes : [], // Ensure sizes is an array
+      colors: Array.isArray(product.colors) ? product.colors : [], // Ensure colors is an array
+      images: product.images || [],
+      stock: product.stock || "",
+      isActive: product.isActive || false,
+      isNew: product.isNew || false,
+      isBestSeller: product.isBestSeller || false,
+      discount: product.discount || 0,
+      gender: product.gender || "Unisex",
+    });
     setShowModal(true);
   };
 
   // Handle delete product
   const handleDelete = async (id) => {
+    const token = localStorage.getItem("token");
+
     if (window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) {
       try {
-        await axios.delete(`${import.meta.env.VITE_API_URL}/products/${id}`);
+        await axios.delete(`${import.meta.env.VITE_API_URL}/products/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         enqueueSnackbar("Xóa sản phẩm thành công", { variant: "success" });
         setProducts(products.filter((product) => product._id !== id));
       } catch (error) {
@@ -185,7 +252,9 @@ const Product = () => {
       }
     }
   };
-
+  useEffect(() => {
+    console.log("Selected colors:", formData.colors);
+  }, [formData.colors]);
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">Đang tải...</div>
@@ -212,6 +281,7 @@ const Product = () => {
               isNew: false,
               isBestSeller: false,
               discount: 0,
+              gender: "Unisex",
             });
             setSelectedImages([]);
             setShowModal(true);
@@ -258,16 +328,14 @@ const Product = () => {
               >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <img
-                    src={`${import.meta.env.VITE_API_URL}/uploads/products/${
-                      product.images[0]
-                    }`}
+                    src={`http://localhost:5000/uploads/categories/${product.images[0]}`}
                     alt={product.name}
-                    className="h-10 w-10 rounded-full object-cover ring-2 ring-gray-200"
+                    className="h-20 w-20 rounded-full object-cover ring-2 ring-gray-200"
                   />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">{product.name}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {product.category}
+                  {product.category?.name}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {product.price.toLocaleString("vi-VN")}đ
@@ -392,10 +460,9 @@ const Product = () => {
                     Mô tả
                   </label>
                   <CKEditor
-                  config={{
-                    licenseKey: `eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3NDQ1ODg3OTksImp0aSI6IjA1Y2I0OTc2LTQxMmItNDNmYy1hNWY3LTdmNmYwZDc1NzE4NCIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6IjRhMTQ0YTMyIn0.Rg4MT4Pci5V1UJyhLug2bO0bmlbG1CRNxMBuS4qKp0sMhPrCaEgzjXNs6lerLqbxX630BwDXNkiYILNqa67ulg`
-
-                  }}
+                    config={{
+                      licenseKey: `eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3NDQ1ODg3OTksImp0aSI6IjA1Y2I0OTc2LTQxMmItNDNmYy1hNWY3LTdmNmYwZDc1NzE4NCIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6IjRhMTQ0YTMyIn0.Rg4MT4Pci5V1UJyhLug2bO0bmlbG1CRNxMBuS4qKp0sMhPrCaEgzjXNs6lerLqbxX630BwDXNkiYILNqa67ulg`,
+                    }}
                     editor={ClassicEditor}
                     data={formData.description}
                     onChange={(event, editor) => {
@@ -504,9 +571,7 @@ const Product = () => {
                           className="relative group"
                         >
                           <img
-                            src={`${
-                              import.meta.env.VITE_API_URL
-                            }/uploads/products/${image}`}
+                            src={`http://localhost:5000/uploads/categories/${image}`}
                             alt={`Sản phẩm ${index + 1}`}
                             className="h-20 w-20 object-cover rounded-lg transition-transform duration-300 transform group-hover:scale-105"
                           />
@@ -577,6 +642,22 @@ const Product = () => {
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out transform hover:scale-[1.01]"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Giới tính
+                  </label>
+                  <select
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out transform hover:scale-[1.01]"
+                    required
+                  >
+                    <option value="Nam">Nam</option>
+                    <option value="Nữ">Nữ</option>
+                    <option value="Unisex">Unisex</option>
+                  </select>
+                </div>
               </div>
               <div className="mt-8 flex justify-end space-x-4">
                 <button
@@ -602,3 +683,4 @@ const Product = () => {
 };
 
 export default Product;
+

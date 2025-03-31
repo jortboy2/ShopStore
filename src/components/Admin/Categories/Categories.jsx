@@ -59,7 +59,9 @@ const Categories = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get("http://localhost:5000/api/categories", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 
+          Authorization: `Bearer ${token}`
+         },
       });
       setCategories(response.data.data);
     } catch (error) {
