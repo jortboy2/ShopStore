@@ -12,6 +12,8 @@ const Product = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [selectedImages, setSelectedImages] = useState([]);
+  const [query, setQuery] = useState("");
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -122,6 +124,7 @@ const Product = () => {
       formDataToSend.append("isBestSeller", formData.isBestSeller);
       formDataToSend.append("discount", formData.discount);
       formDataToSend.append("gender", formData.gender);
+      formDataToSend.append("query", formData.query); // Added query field
 
       // Add arrays as JSON strings
       formDataToSend.append("sizes", JSON.stringify(formData.sizes));
@@ -184,6 +187,7 @@ const Product = () => {
         isBestSeller: false,
         discount: 0,
         gender: "Unisex",
+        query: "", // Reset query
       });
 
       // Refresh products list with categories
@@ -230,6 +234,7 @@ const Product = () => {
       isBestSeller: product.isBestSeller || false,
       discount: product.discount || 0,
       gender: product.gender || "Unisex",
+      query: product.query || "", // Ensure query is set
     });
     setShowModal(true);
   };
@@ -252,6 +257,49 @@ const Product = () => {
       }
     }
   };
+  const handleCategoryChange = async (e) => {
+    const categoryId = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      category: categoryId,
+    }));
+
+    if (categoryId) {
+      try {
+        const categoryRes = await axios.get(
+          `${import.meta.env.VITE_API_URL}/products/category/${categoryId}`
+        );
+        const categoryProducts = categoryRes.data.data;
+
+        if (categoryProducts.length === 0) {
+          setProducts([]); // Nếu danh mục không có sản phẩm, cập nhật danh sách rỗng
+        } else {
+          setProducts(categoryProducts); // Nếu có sản phẩm, cập nhật danh sách sản phẩm
+        }
+      } catch (error) {
+        setProducts([]); // Nếu lỗi, đặt danh sách sản phẩm rỗng
+        enqueueSnackbar(
+          "Lỗi khi tải danh mục: " + error.response.data.message,
+          { variant: "error" }
+        );
+      }
+    } else {
+      // Khi không chọn danh mục nào, lấy tất cả sản phẩm
+      try {
+        const allProductsRes = await axios.get(
+          `${import.meta.env.VITE_API_URL}/products`
+        );
+        setProducts(allProductsRes.data.data);
+      } catch (error) {
+        setProducts([]);
+        enqueueSnackbar(
+          "Lỗi khi tải sản phẩm: " + error.response.data.message,
+          { variant: "error" }
+        );
+      }
+    }
+  };
+
   useEffect(() => {
     console.log("Selected colors:", formData.colors);
   }, [formData.colors]);
@@ -260,6 +308,9 @@ const Product = () => {
       <div className="flex justify-center items-center h-64">Đang tải...</div>
     );
   }
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(query.toLowerCase())
+  );
 
   return (
     <div className="p-6">
@@ -282,6 +333,7 @@ const Product = () => {
               isBestSeller: false,
               discount: 0,
               gender: "Unisex",
+              query: "", // Reset query
             });
             setSelectedImages([]);
             setShowModal(true);
@@ -290,6 +342,40 @@ const Product = () => {
         >
           <FaPlus className="mr-2" /> Thêm Sản phẩm mới
         </button>
+      </div>
+
+      {/* Category Select */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Danh mục
+        </label>
+        <select
+          name="category"
+          value={formData.category}
+          onChange={handleCategoryChange} // Gọi hàm mới
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out transform hover:scale-[1.01]"
+        >
+          <option value="">Chọn danh mục</option>
+          {categories.map((category) => (
+            <option key={category._id} value={category._id}>
+              {category.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Search Input */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Tìm kiếm theo tên
+        </label>
+        <input
+          type="text"
+          name="query"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out transform hover:scale-[1.01]"
+        />
       </div>
 
       {/* Products Table */}
@@ -321,7 +407,7 @@ const Product = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <tr
                 key={product._id}
                 className="hover:bg-gray-50 transition-colors duration-150"
@@ -658,6 +744,18 @@ const Product = () => {
                     <option value="Unisex">Unisex</option>
                   </select>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tìm kiếm theo tên
+                  </label>
+                  <input
+                    type="text"
+                    name="query"
+                    value={formData.query}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out transform hover:scale-[1.01]"
+                  />
+                </div>
               </div>
               <div className="mt-8 flex justify-end space-x-4">
                 <button
@@ -683,4 +781,3 @@ const Product = () => {
 };
 
 export default Product;
-

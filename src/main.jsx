@@ -11,6 +11,8 @@ import Categories from "./components/Admin/Categories/Categories.jsx";
 import { SnackbarProvider } from "notistack";
 import About from "./page/About.jsx";
 import Product from "./components/Admin/Product/Product.jsx";
+import CategoriesPage from "./page/Categories.jsx";
+import ProductPage from "./page/Product.jsx";
 const router = createBrowserRouter([
   // Public routes with RootLayout
   {
@@ -27,6 +29,14 @@ const router = createBrowserRouter([
       {
         path: "/contact",
         element: <div>Contact Page</div>,
+      },
+      {
+        path: "/categories",
+        element: <CategoriesPage />,
+      },
+      {
+        path: "/products",
+        element: <ProductPage />,
       },
     ],
   },

@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
+import ChatPopup from './ChatPopup';
 
 const RootLayout = () => {
   return (
@@ -10,6 +11,7 @@ const RootLayout = () => {
         <Outlet />
       </main>
       <Footer />
+      <ChatPopup />
     </div>
   );
 };
