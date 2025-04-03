@@ -12,7 +12,7 @@ import { SnackbarProvider } from "notistack";
 import About from "./page/About.jsx";
 import Product from "./components/Admin/Product/Product.jsx";
 import CategoriesPage from "./page/Categories.jsx";
-import ProductPage from "./page/Product.jsx";
+import Productpage from "./page/Product.jsx";
 const router = createBrowserRouter([
   // Public routes with RootLayout
   {
@@ -36,7 +36,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/products",
-        element: <ProductPage />,
+        element: <Productpage />,
       },
     ],
   },
