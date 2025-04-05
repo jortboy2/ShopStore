@@ -93,7 +93,7 @@ const DetailProduct = () => {
           {/* Main Image */}
           <div className="relative aspect-square overflow-hidden rounded-lg border border-gray-200">
             <img 
-              src={`${import.meta.env.VITE_API_URL}/uploads/products/${product.images[activeImage]}`} 
+              src={`http://localhost:5000/uploads/categories/${product.images[activeImage]}`} 
               alt={product.name}
               className="w-full h-full object-cover"
             />
@@ -110,7 +110,7 @@ const DetailProduct = () => {
                 onClick={() => setActiveImage(index)}
               >
                 <img 
-                  src={`${import.meta.env.VITE_API_URL}/uploads/products/${image}`} 
+                  src={`http://localhost:5000/uploads/categories/${image}`} 
                   alt={`${product.name} - ${index + 1}`}
                   className="w-full h-full object-cover"
                 />
@@ -217,7 +217,7 @@ const DetailProduct = () => {
             <h3 className="text-sm font-medium text-gray-900 mb-2">Số lượng:</h3>
             <div className="flex items-center">
               <button 
-                className="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-l-md"
+                className="w-10 h-10 cursor-pointer flex items-center justify-center border border-gray-300 rounded-l-md"
                 onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
               >
                 -
@@ -231,7 +231,7 @@ const DetailProduct = () => {
                 className="w-16 h-10 text-center border-t border-b border-gray-300"
               />
               <button 
-                className="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-r-md"
+                className="w-10 h-10 cur flex items-center justify-center border border-gray-300 rounded-r-md"
                 onClick={() => setQuantity(prev => Math.min(product.stock, prev + 1))}
               >
                 +
@@ -270,9 +270,116 @@ const DetailProduct = () => {
       </div>
 
       {/* Product Description */}
-      <div className="mt-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Mô tả sản phẩm</h2>
+      <div className="mt-12 border p-2 border-gray-200 rounded-lg pt-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-2">Mô tả sản phẩm</h2>
         <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: product.description }}></div>
+      </div>
+
+      {/* Comments Section */}
+      <div className="mt-12 border border-gray-200 rounded-lg p-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-2">Đánh giá sản phẩm</h2>
+        
+        {/* Comment Form */}
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Viết đánh giá của bạn</h3>
+          <form className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-gray-700">Đánh giá:</span>
+              <div className="flex">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    className="text-yellow-400 hover:text-yellow-500 focus:outline-none"
+                  >
+                    <FaStar className="w-6 h-6" />
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <textarea
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows="4"
+                placeholder="Chia sẻ cảm nhận của bạn về sản phẩm..."
+              ></textarea>
+            </div>
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Gửi đánh giá
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Comments List */}
+        <div className="space-y-6">
+          {/* Sample Comment - Replace with actual comments from API */}
+          <div className="border-b border-gray-200 pb-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                  <span className="text-gray-600 font-semibold">NV</span>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900">Nguyễn Văn</h4>
+                  <div className="flex items-center">
+                    <div className="flex text-yellow-400">
+                      <FaStar />
+                      <FaStar />
+                      <FaStar />
+                      <FaStar />
+                      <FaStar />
+                    </div>
+                    <span className="ml-2 text-sm text-gray-500">5.0</span>
+                  </div>
+                </div>
+              </div>
+              <span className="text-sm text-gray-500">2 ngày trước</span>
+            </div>
+            <p className="text-gray-700">
+              Sản phẩm rất đẹp, chất lượng tốt. Tôi rất hài lòng với sản phẩm này. Giao hàng nhanh, đóng gói cẩn thận.
+            </p>
+          </div>
+
+          {/* Another Sample Comment */}
+          <div className="border-b border-gray-200 pb-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                  <span className="text-gray-600 font-semibold">TH</span>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900">Trần Hương</h4>
+                  <div className="flex items-center">
+                    <div className="flex text-yellow-400">
+                      <FaStar />
+                      <FaStar />
+                      <FaStar />
+                      <FaStar />
+                      <FaStarHalfAlt />
+                    </div>
+                    <span className="ml-2 text-sm text-gray-500">4.5</span>
+                  </div>
+                </div>
+              </div>
+              <span className="text-sm text-gray-500">1 tuần trước</span>
+            </div>
+            <p className="text-gray-700">
+              Chất liệu vải mềm mại, thoáng mát. Màu sắc đúng như hình. Tuy nhiên size hơi nhỏ so với bảng size.
+            </p>
+          </div>
+        </div>
+
+        {/* Load More Comments Button */}
+        <div className="mt-6 text-center">
+          <button className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+            Xem thêm đánh giá
+          </button>
+        </div>
       </div>
     </div>
   );

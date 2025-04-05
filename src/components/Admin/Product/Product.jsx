@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FaPlus, FaEdit, FaTrash, FaUpload } from "react-icons/fa";
+import { FaPlus, FaEdit, FaTrash, FaUpload, FaRobot } from "react-icons/fa";
 import { useSnackbar } from "notistack";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
@@ -13,6 +13,8 @@ const Product = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [selectedImages, setSelectedImages] = useState([]);
   const [query, setQuery] = useState("");
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+  const [prompt, setPrompt] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -303,6 +305,41 @@ const Product = () => {
   useEffect(() => {
     console.log("Selected colors:", formData.colors);
   }, [formData.colors]);
+
+  // Function to generate description using Gemini AI
+  const generateDescription = async () => {
+    try {
+      setIsGeneratingDescription(true);
+      
+      // Lấy URL của hình ảnh đầu tiên được upload trong UI nếu có
+      const imageUrl = selectedImages.length > 0 
+        ? URL.createObjectURL(selectedImages[0])
+        : null;
+
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/generate-description`, {
+        prompt: prompt,
+        productName: formData.name,
+        category: categories.find(cat => cat._id === formData.category)?.name || "",
+        price: formData.price,
+        gender: formData.gender,
+        imageUrl: imageUrl
+      });
+
+      if (response.data.success) {
+        setFormData(prev => ({
+          ...prev,
+          description: response.data.description
+        }));
+        enqueueSnackbar("Đã tạo mô tả thành công", { variant: "success" });
+      }
+    } catch (error) {
+      console.error("Error generating description:", error);
+      enqueueSnackbar("Lỗi khi tạo mô tả", { variant: "error" });
+    } finally {
+      setIsGeneratingDescription(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">Đang tải...</div>
@@ -460,7 +497,7 @@ const Product = () => {
 
       {/* Add/Edit Product Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center backdrop-blur-sm">
+        <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center backdrop-blur-sm z-20">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
             <h2 className="text-2xl font-bold mb-6 text-gray-800">
               {editingProduct ? "Chỉnh sửa Sản phẩm" : "Thêm Sản phẩm mới"}
@@ -545,6 +582,26 @@ const Product = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Mô tả
                   </label>
+                  <div className="mb-4">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        placeholder="Nhập gợi ý để tạo mô tả sản phẩm..."
+                        className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={generateDescription}
+                        disabled={isGeneratingDescription}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                      >
+                        <FaRobot />
+                        {isGeneratingDescription ? "Đang tạo..." : "Tạo mô tả"}
+                      </button>
+                    </div>
+                  </div>
                   <CKEditor
                     config={{
                       licenseKey: `eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3NDQ1ODg3OTksImp0aSI6IjA1Y2I0OTc2LTQxMmItNDNmYy1hNWY3LTdmNmYwZDc1NzE4NCIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6IjRhMTQ0YTMyIn0.Rg4MT4Pci5V1UJyhLug2bO0bmlbG1CRNxMBuS4qKp0sMhPrCaEgzjXNs6lerLqbxX630BwDXNkiYILNqa67ulg`,
@@ -744,18 +801,7 @@ const Product = () => {
                     <option value="Unisex">Unisex</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tìm kiếm theo tên
-                  </label>
-                  <input
-                    type="text"
-                    name="query"
-                    value={formData.query}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out transform hover:scale-[1.01]"
-                  />
-                </div>
+
               </div>
               <div className="mt-8 flex justify-end space-x-4">
                 <button

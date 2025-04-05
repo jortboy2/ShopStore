@@ -13,6 +13,7 @@ import About from "./page/About.jsx";
 import Product from "./components/Admin/Product/Product.jsx";
 import CategoriesPage from "./page/Categories.jsx";
 import Productpage from "./page/Product.jsx";
+import DetailProduct from "./page/DetailProduct.jsx";
 const router = createBrowserRouter([
   // Public routes with RootLayout
   {
@@ -37,6 +38,10 @@ const router = createBrowserRouter([
       {
         path: "/products",
         element: <Productpage />,
+      },
+      {
+        path: "/product/:id",
+        element: <DetailProduct />,
       },
     ],
   },

@@ -225,7 +225,7 @@ const Home = () => {
               {categories.map((category) => (
                 <Link
                   key={category._id}
-                  to={`/products?category=${category.slug}`}
+                  to={`/products?category=${category._id}`}
                   className="group relative overflow-hidden rounded-lg"
                 >
                   <img
