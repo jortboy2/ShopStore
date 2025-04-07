@@ -7,13 +7,16 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import "./index.css";
 import Home from "./page/Home.jsx";
 import Dashboard from "./components/Admin/Dashboard.jsx"; // Importing the Dashboard component
-import Categories from "./components/Admin/Categories/Categories.jsx";
+import Categories from "./page/admin/Categories.jsx";
 import { SnackbarProvider } from "notistack";
 import About from "./page/About.jsx";
-import Product from "./components/Admin/Product/Product.jsx";
+import Product from "./page/admin/Product.jsx";
 import CategoriesPage from "./page/Categories.jsx";
 import Productpage from "./page/Product.jsx";
 import DetailProduct from "./page/DetailProduct.jsx";
+import Cart from "./page/Cart.jsx";
+import Checkout from "./page/Checkout.jsx";
+import OrderManagement from "./page/admin/OrderManagement.jsx";
 const router = createBrowserRouter([
   // Public routes with RootLayout
   {
@@ -42,6 +45,14 @@ const router = createBrowserRouter([
       {
         path: "/product/:id",
         element: <DetailProduct />,
+      },
+      {
+        path: "/cart",
+        element: <Cart />,
+      },
+      {
+        path: "/checkout",
+        element: <Checkout />,
       },
     ],
   },
@@ -81,6 +92,10 @@ const router = createBrowserRouter([
       {
         path: "profile",
         element: <div>Thông tin cá nhân</div>,
+      },
+      {
+        path: "orders",
+        element: <OrderManagement />,
       },
     ],
   },

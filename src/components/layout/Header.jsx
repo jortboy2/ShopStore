@@ -18,6 +18,7 @@ const Header = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
   const navigate = useNavigate();
 
   // Kiểm tra trạng thái đăng nhập khi component mount
@@ -38,6 +39,36 @@ const Header = () => {
         console.error("Lỗi khi parse dữ liệu người dùng:", error);
       }
     }
+  }, []);
+
+  // Theo dõi số lượng sản phẩm trong giỏ hàng
+  useEffect(() => {
+    const updateCartCount = () => {
+      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+      const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+      setCartCount(totalItems);
+    };
+
+    // Cập nhật số lượng ban đầu
+    updateCartCount();
+
+    // Tạo một hàm để lắng nghe sự kiện storage
+    const handleStorageChange = (e) => {
+      if (e.key === "cart") {
+        updateCartCount();
+      }
+    };
+
+    // Lắng nghe sự kiện storage
+    window.addEventListener("storage", handleStorageChange);
+    
+    // Lắng nghe sự kiện cart-updated (sẽ được gửi từ các component khác)
+    window.addEventListener("cart-updated", updateCartCount);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("cart-updated", updateCartCount);
+    };
   }, []);
 
   const handleSearch = (e) => {
@@ -124,9 +155,11 @@ const Header = () => {
               className="text-gray-600 hover:text-blue-500 relative"
             >
               <FaShoppingCart className="text-xl" />
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                0
-              </span>
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
             </Link>
 
             {isAuthenticated ? (

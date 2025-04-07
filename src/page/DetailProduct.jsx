@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaShoppingCart, FaHeart, FaShare, FaStar, FaStarHalfAlt } from "react-icons/fa";
 import { useSnackbar } from "notistack";
@@ -13,6 +13,7 @@ const DetailProduct = () => {
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const { enqueueSnackbar } = useSnackbar();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -38,31 +39,96 @@ const DetailProduct = () => {
   }, [id, enqueueSnackbar]);
 
   const handleAddToCart = () => {
-    if (!selectedColor) {
-      enqueueSnackbar("Vui lòng chọn màu sắc", { variant: "warning" });
+    // Kiểm tra đăng nhập
+    const token = localStorage.getItem("token");
+    if (!token) {
+      enqueueSnackbar("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng", {
+        variant: "warning",
+      });
+      navigate("/login");
       return;
     }
-    if (!selectedSize) {
-      enqueueSnackbar("Vui lòng chọn kích thước", { variant: "warning" });
+
+    if (!selectedColor || !selectedSize) {
+      enqueueSnackbar("Vui lòng chọn màu sắc và kích thước", {
+        variant: "warning",
+      });
       return;
     }
-    
-    // Add to cart logic here
-    enqueueSnackbar("Đã thêm sản phẩm vào giỏ hàng", { variant: "success" });
+
+    try {
+      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+      const existingItemIndex = cart.findIndex(
+        (item) =>
+          item.productId === product._id &&
+          item.color === selectedColor &&
+          item.size === selectedSize
+      );
+
+      if (existingItemIndex !== -1) {
+        cart[existingItemIndex].quantity += quantity;
+      } else {
+        cart.push({
+          productId: product._id,
+          name: product.name,
+          price: product.price,
+          discount: product.discount,
+          image: product.images[0],
+          quantity,
+          size: selectedSize,
+          color: selectedColor,
+        });
+      }
+
+      localStorage.setItem("cart", JSON.stringify(cart));
+      window.dispatchEvent(new Event("cart-updated"));
+      enqueueSnackbar("Đã thêm vào giỏ hàng", { variant: "success" });
+    } catch (error) {
+      console.error("Lỗi khi thêm vào giỏ hàng:", error);
+      enqueueSnackbar("Có lỗi xảy ra khi thêm vào giỏ hàng", {
+        variant: "error",
+      });
+    }
   };
 
   const handleBuyNow = () => {
-    if (!selectedColor) {
-      enqueueSnackbar("Vui lòng chọn màu sắc", { variant: "warning" });
+    // Kiểm tra đăng nhập
+    const token = localStorage.getItem("token");
+    if (!token) {
+      enqueueSnackbar("Vui lòng đăng nhập để mua hàng", {
+        variant: "warning",
+      });
+      navigate("/login");
       return;
     }
-    if (!selectedSize) {
-      enqueueSnackbar("Vui lòng chọn kích thước", { variant: "warning" });
+
+    if (!selectedColor || !selectedSize) {
+      enqueueSnackbar("Vui lòng chọn màu sắc và kích thước", {
+        variant: "warning",
+      });
       return;
     }
-    
-    // Buy now logic here
-    enqueueSnackbar("Đang chuyển đến trang thanh toán", { variant: "info" });
+
+    try {
+      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+      cart.push({
+        productId: product._id,
+        name: product.name,
+        price: product.price,
+        discount: product.discount,
+        image: product.images[0],
+        quantity,
+        size: selectedSize,
+        color: selectedColor,
+      });
+
+      localStorage.setItem("cart", JSON.stringify(cart));
+      window.dispatchEvent(new Event("cart-updated"));
+      navigate("/cart");
+    } catch (error) {
+      console.error("Lỗi khi mua hàng:", error);
+      enqueueSnackbar("Có lỗi xảy ra khi mua hàng", { variant: "error" });
+    }
   };
 
   if (loading) {
@@ -153,8 +219,8 @@ const DetailProduct = () => {
 
           <div className="border-t border-b border-gray-200 py-4">
             <div className="flex items-center justify-between">
-              <span className="text-gray-500">Danh mục:</span>
-              <span className="font-medium">{product.category?.name || 'Chưa phân loại'}</span>
+              <span className="text-gray-500">Tồn kho:</span>
+              <span className="font-medium">{product.stock || '0'}</span>
             </div>
             <div className="flex items-center justify-between mt-2">
               <span className="text-gray-500">Tình trạng:</span>

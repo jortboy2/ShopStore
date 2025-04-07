@@ -59,7 +59,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
       if (response.data.success) {
         // Đảm bảo userData là một object hợp lệ
         const userData = {
-          id: response.data.user._id,
+          id: response.data.user.id,
           username: response.data.user.username,
           email: response.data.user.email,
           role: response.data.user.role,

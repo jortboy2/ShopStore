@@ -15,6 +15,7 @@ import {
   FaSearch,
   FaChevronLeft,
   FaChevronRight,
+  FaShoppingCart,
 } from "react-icons/fa";
 
 const AdminLayout = () => {
@@ -56,6 +57,7 @@ const AdminLayout = () => {
     { title: "Danh Mục", icon: <FaTags />, path: "/admin/categories" },
     { title: "Thống Kê", icon: <FaChartBar />, path: "/admin/stats" },
     { title: "Cài Đặt", icon: <FaCog />, path: "/admin/settings" },
+    { title: "Đơn Hàng", icon: <FaShoppingCart />, path: "/admin/orders" },
   ];
 
   return (
