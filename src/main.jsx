@@ -17,6 +17,8 @@ import DetailProduct from "./page/DetailProduct.jsx";
 import Cart from "./page/Cart.jsx";
 import Checkout from "./page/Checkout.jsx";
 import OrderManagement from "./page/admin/OrderManagement.jsx";
+import NotFound from "./page/NotFound.jsx";
+import Contact from "./page/Contact.jsx";
 const router = createBrowserRouter([
   // Public routes with RootLayout
   {
@@ -32,7 +34,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/contact",
-        element: <div>Contact Page</div>,
+        element: <Contact />,
       },
       {
         path: "/categories",
@@ -53,6 +55,10 @@ const router = createBrowserRouter([
       {
         path: "/checkout",
         element: <Checkout />,
+      },
+      {
+        path: "/*",
+        element: <NotFound />,
       },
     ],
   },

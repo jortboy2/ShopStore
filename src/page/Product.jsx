@@ -38,8 +38,7 @@ const Productpage = () => {
           }
         }
       } catch (error) {
-        // console.error("Error fetching categories:", error);
-        // enqueueSnackbar("Không thể tải danh mục sản phẩm", { variant: "error" });
+        enqueueSnackbar("Không thể tải danh mục sản phẩm", { variant: "error" });
       }
     };
 
@@ -53,8 +52,12 @@ const Productpage = () => {
         setLoading(true);
         let url = `${import.meta.env.VITE_API_URL}/products`;
         
+        // If gender is selected, use the gender-specific endpoint
+        if (filters.gender) {
+          url = `${import.meta.env.VITE_API_URL}/products/gender/${filters.gender}`;
+        }
         // If category is selected, use the category-specific endpoint
-        if (filters.category) {
+        else if (filters.category) {
           url = `${import.meta.env.VITE_API_URL}/products/category/${filters.category}`;
         }
         
@@ -62,7 +65,6 @@ const Productpage = () => {
         const params = new URLSearchParams();
         if (filters.minPrice) params.append("minPrice", filters.minPrice);
         if (filters.maxPrice) params.append("maxPrice", filters.maxPrice);
-        if (filters.gender) params.append("gender", filters.gender);
         if (filters.search) params.append("search", filters.search);
         
         // Add date filter to ensure we get the most recent products
@@ -74,12 +76,10 @@ const Productpage = () => {
           url += `?${queryString}`;
         }
         
-        // console.log("Fetching products from:", url);
         const response = await axios.get(url);
-        console.log("response: ", response.data.data);
         setProducts(response.data.data);
       } catch (error) {
-        // console.error("Error fetching products:", error);
+        enqueueSnackbar("Không thể tải sản phẩm", { variant: "error" });
       } finally {
         setLoading(false);
       }
@@ -135,9 +135,7 @@ const Productpage = () => {
     const category = categories.find(cat => cat._id === filters.category);
     return category ? category.name : "Sản phẩm";
   };
-  useEffect(() => {
-    console.log("products: ", products);
-  }, [products]);
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}

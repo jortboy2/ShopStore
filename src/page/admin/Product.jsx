@@ -13,6 +13,7 @@ const Product = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [selectedImages, setSelectedImages] = useState([]);
   const [query, setQuery] = useState("");
+  const [selectedGender, setSelectedGender] = useState("");
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
   const [prompt, setPrompt] = useState("");
 
@@ -340,6 +341,29 @@ const Product = () => {
     }
   };
 
+  // Handle gender filter change
+  const handleGenderChange = async (e) => {
+    const gender = e.target.value;
+    setSelectedGender(gender);
+    
+    try {
+      if (gender) {
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/products/gender/${gender}`
+        );
+        setProducts(response.data.data);
+      } else {
+        // If no gender selected, fetch all products
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/products`
+        );
+        setProducts(response.data.data);
+      }
+    } catch (error) {
+      enqueueSnackbar("Lỗi khi tải sản phẩm theo giới tính", { variant: "error" });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">Đang tải...</div>
@@ -370,7 +394,7 @@ const Product = () => {
               isBestSeller: false,
               discount: 0,
               gender: "Unisex",
-              query: "", // Reset query
+              query: "",
             });
             setSelectedImages([]);
             setShowModal(true);
@@ -379,6 +403,23 @@ const Product = () => {
         >
           <FaPlus className="mr-2" /> Thêm Sản phẩm mới
         </button>
+      </div>
+
+      {/* Gender Filter */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Lọc theo giới tính
+        </label>
+        <select
+          value={selectedGender}
+          onChange={handleGenderChange}
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out transform hover:scale-[1.01]"
+        >
+          <option value="">Tất cả</option>
+          <option value="Nam">Nam</option>
+          <option value="Nữ">Nữ</option>
+          <option value="Unisex">Unisex</option>
+        </select>
       </div>
 
       {/* Category Select */}

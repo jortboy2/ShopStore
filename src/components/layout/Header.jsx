@@ -233,9 +233,9 @@ const Header = () => {
           <Link to="/products" className="text-gray-600 hover:text-blue-500">
             Sản Phẩm
           </Link>
-          <Link to="/deals" className="text-gray-600 hover:text-blue-500">
+          {/* <Link to="/deals" className="text-gray-600 hover:text-blue-500">
             Khuyến Mãi
-          </Link>
+          </Link> */}
           <Link to="/about" className="text-gray-600 hover:text-blue-500">
             Về Chúng Tôi
           </Link>
