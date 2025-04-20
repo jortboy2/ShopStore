@@ -14,6 +14,9 @@ const DetailProduct = () => {
   const [activeImage, setActiveImage] = useState(0);
   const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
+  const [promoCode, setPromoCode] = useState("");
+  const [promoCodeError, setPromoCodeError] = useState("");
+  const [appliedPromoCode, setAppliedPromoCode] = useState(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -65,18 +68,38 @@ const DetailProduct = () => {
           item.size === selectedSize
       );
 
+      const itemPrice = appliedPromoCode
+        ? appliedPromoCode.type === "percentage"
+          ? discountedPrice - (discountedPrice * appliedPromoCode.discountValue / 100)
+          : discountedPrice - appliedPromoCode.discountValue
+        : discountedPrice;
+
       if (existingItemIndex !== -1) {
         cart[existingItemIndex].quantity += quantity;
+        cart[existingItemIndex].price = itemPrice;
+        if (appliedPromoCode) {
+          cart[existingItemIndex].promoCode = appliedPromoCode.code;
+          cart[existingItemIndex].promoDiscount = appliedPromoCode.type === "percentage" 
+            ? (discountedPrice * appliedPromoCode.discountValue / 100)
+            : appliedPromoCode.discountValue;
+        }
       } else {
         cart.push({
           productId: product._id,
           name: product.name,
-          price: product.price,
+          price: itemPrice,
+          originalPrice: product.price,
           discount: product.discount,
           image: product.images[0],
           quantity,
           size: selectedSize,
           color: selectedColor,
+          ...(appliedPromoCode && {
+            promoCode: appliedPromoCode.code,
+            promoDiscount: appliedPromoCode.type === "percentage" 
+              ? (discountedPrice * appliedPromoCode.discountValue / 100)
+              : appliedPromoCode.discountValue
+          })
         });
       }
 
@@ -111,15 +134,28 @@ const DetailProduct = () => {
 
     try {
       const cart = JSON.parse(localStorage.getItem("cart")) || [];
+      const itemPrice = appliedPromoCode
+        ? appliedPromoCode.type === "percentage"
+          ? discountedPrice - (discountedPrice * appliedPromoCode.discountValue / 100)
+          : discountedPrice - appliedPromoCode.discountValue
+        : discountedPrice;
+
       cart.push({
         productId: product._id,
         name: product.name,
-        price: product.price,
+        price: itemPrice,
+        originalPrice: product.price,
         discount: product.discount,
         image: product.images[0],
         quantity,
         size: selectedSize,
         color: selectedColor,
+        ...(appliedPromoCode && {
+          promoCode: appliedPromoCode.code,
+          promoDiscount: appliedPromoCode.type === "percentage" 
+            ? (discountedPrice * appliedPromoCode.discountValue / 100)
+            : appliedPromoCode.discountValue
+        })
       });
 
       localStorage.setItem("cart", JSON.stringify(cart));
@@ -128,6 +164,28 @@ const DetailProduct = () => {
     } catch (error) {
       console.error("Lỗi khi mua hàng:", error);
       enqueueSnackbar("Có lỗi xảy ra khi mua hàng", { variant: "error" });
+    }
+  };
+
+  const handleApplyPromoCode = async () => {
+    try {
+      setPromoCodeError("");
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/promotions/validate`,
+        { code: promoCode },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.success) {
+        setAppliedPromoCode(response.data.data);
+        setPromoCode("");
+      } else {
+        setPromoCodeError(response.data.message);
+      }
+    } catch (error) {
+      console.error("Error validating promo code:", error);
+      setPromoCodeError("Không thể kiểm tra mã giảm giá");
     }
   };
 
@@ -150,6 +208,12 @@ const DetailProduct = () => {
   const discountedPrice = product.discount 
     ? product.price - (product.price * product.discount / 100) 
     : product.price;
+
+  const finalPrice = appliedPromoCode
+    ? appliedPromoCode.type === "percentage"
+      ? discountedPrice - (discountedPrice * appliedPromoCode.discountValue / 100)
+      : discountedPrice - appliedPromoCode.discountValue
+    : discountedPrice;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -204,7 +268,7 @@ const DetailProduct = () => {
           <div className="flex items-center space-x-4">
             {product.discount > 0 && (
               <span className="text-2xl font-bold text-red-600">
-                {new Intl.NumberFormat('vi-VN').format(discountedPrice)}đ
+                {new Intl.NumberFormat('vi-VN').format(finalPrice)}đ
               </span>
             )}
             <span className={`text-xl ${product.discount > 0 ? 'line-through text-gray-500' : 'font-bold text-gray-900'}`}>
@@ -213,6 +277,11 @@ const DetailProduct = () => {
             {product.discount > 0 && (
               <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-sm font-medium">
                 -{product.discount}%
+              </span>
+            )}
+            {appliedPromoCode && (
+              <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded text-sm font-medium">
+                -{appliedPromoCode.type === "percentage" ? `${appliedPromoCode.discountValue}%` : `${new Intl.NumberFormat('vi-VN').format(appliedPromoCode.discountValue)}đ`}
               </span>
             )}
           </div>
@@ -303,6 +372,52 @@ const DetailProduct = () => {
                 +
               </button>
             </div>
+          </div>
+
+          {/* Promo Code */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-900">Mã giảm giá:</h3>
+            <div className="flex space-x-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  placeholder="Nhập mã giảm giá"
+                  className="block w-full outline-none px-4 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <span className="text-gray-500 text-sm">CODE</span>
+                </div>
+              </div>
+              <button
+                onClick={handleApplyPromoCode}
+                className="px-4 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
+              >
+                Áp dụng
+              </button>
+            </div>
+            {promoCodeError && (
+              <p className="text-sm text-red-500">{promoCodeError}</p>
+            )}
+            {appliedPromoCode && (
+              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-sm font-medium text-green-700">
+                    Đã áp dụng mã: {appliedPromoCode.code}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setAppliedPromoCode(null)}
+                  className="text-sm text-green-600 hover:text-green-700"
+                >
+                  Xóa
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Action Buttons */}

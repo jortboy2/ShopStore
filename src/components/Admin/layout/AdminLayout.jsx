@@ -55,9 +55,8 @@ const AdminLayout = () => {
     { title: "Sản Phẩm", icon: <FaShoppingBag />, path: "/admin/products" },
     { title: "Người Dùng", icon: <FaUsers />, path: "/admin/users" },
     { title: "Danh Mục", icon: <FaTags />, path: "/admin/categories" },
-    { title: "Thống Kê", icon: <FaChartBar />, path: "/admin/stats" },
-    { title: "Cài Đặt", icon: <FaCog />, path: "/admin/settings" },
     { title: "Đơn Hàng", icon: <FaShoppingCart />, path: "/admin/orders" },
+    { title: "Mã Giảm Giá", icon: <FaTags />, path: "/admin/promocodes" },
   ];
 
   return (

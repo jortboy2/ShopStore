@@ -146,7 +146,7 @@ const OrderManagement = () => {
               <tr key={order._id}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">
-                    {order._id.slice(-6).toUpperCase()}
+                    {order._id.toUpperCase()}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -163,7 +163,7 @@ const OrderManagement = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">
-                    {order.paymentMethod === "momo" ? "Momo" : "Chuyển khoản"}
+                    {order.paymentMethod === "momo" ? "Momo" : order.paymentMethod === "cash_on_delivery" ? "Thanh toán khi nhận hàng" : "Chuyển khoản"}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">

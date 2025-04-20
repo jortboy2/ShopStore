@@ -36,7 +36,7 @@ const Categories = () => {
           {categories.map((category) => (
             <Link
               key={category._id}
-              to={`/products?category=${category.slug}`}
+              to={`/products?category=${category._id}`}
               className="group relative overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300"
             >
               <div className="aspect-w-16 aspect-h-9">

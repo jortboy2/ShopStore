@@ -19,6 +19,10 @@ import Checkout from "./page/Checkout.jsx";
 import OrderManagement from "./page/admin/OrderManagement.jsx";
 import NotFound from "./page/NotFound.jsx";
 import Contact from "./page/Contact.jsx";
+import OrderDetail from "./page/OrderDetail.jsx";
+import Orders from "./page/Orders.jsx";
+import User from "./page/admin/User.jsx";
+import Promocode from "./page/admin/Promocode.jsx";
 const router = createBrowserRouter([
   // Public routes with RootLayout
   {
@@ -57,6 +61,14 @@ const router = createBrowserRouter([
         element: <Checkout />,
       },
       {
+        path: "/order/:id",
+        element: <OrderDetail />,
+      },
+      {
+        path: "/orders",
+        element: <Orders />,
+      },
+      {
         path: "/*",
         element: <NotFound />,
       },
@@ -79,25 +91,18 @@ const router = createBrowserRouter([
         path: "products",
         element: <Product />,
       },
-      {
-        path: "users",
-        element: <div>Quản lý người dùng</div>,
-      },
+
       {
         path: "categories",
         element: <Categories />,
       },
       {
-        path: "stats",
-        element: <div>Thống kê chi tiết</div>,
+        path: "users",
+        element: <User />,
       },
       {
-        path: "settings",
-        element: <div>Cài đặt hệ thống</div>,
-      },
-      {
-        path: "profile",
-        element: <div>Thông tin cá nhân</div>,
+        path: "promocodes",
+        element: <Promocode />,
       },
       {
         path: "orders",

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaCreditCard, FaMobileAlt } from "react-icons/fa";
+import { FaArrowLeft, FaCreditCard, FaMobileAlt, FaMoneyBillWave } from "react-icons/fa";
 import { useSnackbar } from "notistack";
 import axios from "axios";
 
@@ -60,7 +60,6 @@ const Checkout = () => {
       const token = localStorage.getItem("token");
       if (!token) {
         enqueueSnackbar("Vui lòng đăng nhập để đặt hàng", { variant: "warning" });
-        navigate("/login");
         return;
       }
 
@@ -80,13 +79,14 @@ const Checkout = () => {
           size: item.size,
           color: item.color,
           price: item.price,
-          discount: item.discount || 0
+          discount: item.discount || 0,
+          image: item.image
         })),
         shippingAddress: formData.address,
         phone: formData.phone,
         email: formData.email,
         fullName: formData.name,
-        paymentMethod: paymentMethod === "bank" ? "bank_transfer" : "momo",
+        paymentMethod: paymentMethod === "bank" ? "bank_transfer" : paymentMethod === "cod" ? "cash_on_delivery" : "momo",
         totalAmount: total,
         note: formData.note || "",
         status: "pending"
@@ -278,6 +278,23 @@ const Checkout = () => {
                     </p>
                   </div>
                 </div>
+
+                <div
+                  className={`flex items-center p-4 border rounded-lg cursor-pointer ${
+                    paymentMethod === "cod"
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200"
+                  }`}
+                  onClick={() => setPaymentMethod("cod")}
+                >
+                  <FaMoneyBillWave className="text-yellow-500 text-2xl mr-4" />
+                  <div>
+                    <h3 className="font-semibold">Thanh toán khi nhận hàng (COD)</h3>
+                    <p className="text-sm text-gray-600">
+                      Thanh toán bằng tiền mặt khi nhận hàng
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -318,6 +335,30 @@ const Checkout = () => {
                     <p className="text-sm font-mono bg-white p-2 rounded">
                       DONHANG {Date.now()}
                     </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {paymentMethod === "cod" && (
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h3 className="font-semibold mb-2">Thông tin thanh toán khi nhận hàng</h3>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Số tiền cần thanh toán: {new Intl.NumberFormat("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }).format(total)}</p>
+                    <p className="text-sm text-gray-600">Phương thức: Tiền mặt</p>
+                    <p className="text-sm text-gray-600">Thời gian: Khi nhận hàng</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Lưu ý:</p>
+                    <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                      <li>Vui lòng kiểm tra hàng hóa trước khi thanh toán</li>
+                      <li>Chỉ thanh toán khi đã kiểm tra và hài lòng với sản phẩm</li>
+                      <li>Nhân viên giao hàng sẽ cung cấp hóa đơn sau khi thanh toán</li>
+                    </ul>
                   </div>
                 </div>
               </div>

@@ -166,7 +166,7 @@ const Header = () => {
               <div className="relative">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 font-bold"
+                  className="flex cursor-pointer items-center space-x-2 text-gray-700 hover:text-gray-900 font-bold"
                 >
                   <span>{user?.username || "Tài khoản"}</span>
                   <FaChevronDown className="text-xs" />

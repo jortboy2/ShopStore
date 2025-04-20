@@ -14,6 +14,7 @@ import {
   Legend
 } from 'chart.js';
 import axios from 'axios';
+import { useSnackbar } from 'notistack';
 
 // Register ChartJS components
 ChartJS.register(
@@ -35,6 +36,8 @@ const Dashboard = () => {
     totalProducts: 0,
     totalRevenue: 0
   });
+  const [loading, setLoading] = useState(true);
+  const { enqueueSnackbar } = useSnackbar();
 
   // Sample data for charts
   const revenueData = {
@@ -87,18 +90,54 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
+        setLoading(true);
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:5000/api/admin/stats', {
+        const userData = localStorage.getItem('user');
+        
+        if (!token || !userData) {
+          enqueueSnackbar("Vui lòng đăng nhập", { variant: "warning" });
+          return;
+        }
+
+        const user = JSON.parse(userData);
+        
+        // Fetch user orders
+        const ordersResponse = await axios.get(`${import.meta.env.VITE_API_URL}/orders/user/${user.id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setStats(response.data.stats);
+
+        // Fetch total users
+        const usersResponse = await axios.get(`${import.meta.env.VITE_API_URL}/users`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (ordersResponse.data.success && usersResponse.data.success) {
+          const orders = ordersResponse.data.data;
+          const users = usersResponse.data.data;
+          const total_user = users.filter(user => user.role === "user").length;
+          // Calculate statistics
+          const totalOrders = orders.length;
+          const totalProducts = orders.reduce((sum, order) => 
+            sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
+          const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+          
+          setStats({
+            totalUsers: total_user,
+            totalOrders,
+            totalProducts,
+            totalRevenue
+          });
+        }
       } catch (error) {
         console.error('Error fetching stats:', error);
+        enqueueSnackbar("Không thể tải thống kê", { variant: "error" });
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchStats();
-  }, []);
+  }, [enqueueSnackbar]);
 
   const StatCard = ({ title, value, icon, color }) => (
     <div className="bg-white rounded-lg shadow p-6">
@@ -113,6 +152,14 @@ const Dashboard = () => {
       </div>
     </div>
   );
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
