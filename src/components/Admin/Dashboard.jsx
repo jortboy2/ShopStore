@@ -36,6 +36,8 @@ const Dashboard = () => {
     totalProducts: 0,
     totalRevenue: 0
   });
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [recentUsers, setRecentUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const { enqueueSnackbar } = useSnackbar();
 
@@ -110,6 +112,9 @@ const Dashboard = () => {
         const usersResponse = await axios.get(`${import.meta.env.VITE_API_URL}/users`, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        const productsResponse = await axios.get(`${import.meta.env.VITE_API_URL}/products`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
 
         if (ordersResponse.data.success && usersResponse.data.success) {
           const orders = ordersResponse.data.data;
@@ -117,8 +122,7 @@ const Dashboard = () => {
           const total_user = users.filter(user => user.role === "user").length;
           // Calculate statistics
           const totalOrders = orders.length;
-          const totalProducts = orders.reduce((sum, order) => 
-            sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
+          const totalProducts = productsResponse.data.data.length;
           const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
           
           setStats({
@@ -137,6 +141,71 @@ const Dashboard = () => {
     };
 
     fetchStats();
+  }, [enqueueSnackbar]);
+
+  useEffect(() => {
+    const fetchRecentOrders = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          enqueueSnackbar("Vui lòng đăng nhập", { variant: "warning" });
+          return;
+        }
+
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/orders`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (response.data.success) {
+          const orders = response.data.data;
+          const sortedOrders = orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          setRecentOrders(sortedOrders.slice(0, 5));
+        }
+      } catch (error) {
+        console.error('Error fetching recent orders:', error);
+        enqueueSnackbar("Không thể tải đơn hàng gần đây", { variant: "error" });
+      }
+    };
+
+    fetchRecentOrders();
+  }, [enqueueSnackbar]);
+
+  useEffect(() => {
+    const fetchRecentUsers = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          enqueueSnackbar("Vui lòng đăng nhập", { variant: "warning" });
+          return;
+        }
+
+        const usersResponse = await axios.get(`${import.meta.env.VITE_API_URL}/users`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const ordersResponse = await axios.get(`${import.meta.env.VITE_API_URL}/orders`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (usersResponse.data.success && ordersResponse.data.success) {
+          const users = usersResponse.data.data;
+          const orders = ordersResponse.data.data;
+
+          // Filter recent users based on matching userId in orders
+          const recentUsers = orders.map(order => {
+            const user = users.find(user => user.id === order.userId);
+            return user ? { id: user.id, name: user.name } : null;
+          }).filter(Boolean);
+
+          setRecentUsers(recentUsers);
+        }
+      } catch (error) {
+        console.error('Error fetching recent users:', error);
+        enqueueSnackbar("Không thể tải người dùng gần đây", { variant: "error" });
+      }
+    };
+
+    fetchRecentUsers();
   }, [enqueueSnackbar]);
 
   const StatCard = ({ title, value, icon, color }) => (
@@ -217,15 +286,17 @@ const Dashboard = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold mb-4">Đơn Hàng Gần Đây</h2>
           <div className="space-y-4">
-            {[1, 2, 3, 4, 5].map((order) => (
-              <div key={order} className="flex items-center justify-between border-b pb-2">
+            {recentOrders.map((order) => (
+              <div key={order.id} className="flex items-center justify-between border-b pb-2">
                 <div>
-                  <p className="font-medium">Đơn hàng #{order}</p>
-                  <p className="text-sm text-gray-500">Người dùng {order}</p>
+                  <p className="font-medium">Đơn hàng #{order._id}</p>
+                  <p className="text-sm text-gray-500">Người dùng: {recentUsers.username || 'Không xác định'}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium">{(Math.random() * 1000000).toLocaleString()} VNĐ</p>
-                  <p className="text-sm text-green-500">Đã giao hàng</p>
+                  <p className="font-medium">{order.totalAmount.toLocaleString()} VNĐ</p>
+                  <p className={`text-sm ${order.status === 'Đã giao hàng' ? 'text-green-500' : 'text-red-500'}`}>
+                    {order.status}
+                  </p>
                 </div>
               </div>
             ))}
@@ -236,4 +307,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

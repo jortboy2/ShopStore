@@ -185,7 +185,7 @@ const DetailProduct = () => {
       }
     } catch (error) {
       console.error("Error validating promo code:", error);
-      setPromoCodeError("Không thể kiểm tra mã giảm giá");
+      setPromoCodeError(error.response.data.message);
     }
   };
 

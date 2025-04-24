@@ -45,48 +45,40 @@ const Productpage = () => {
     fetchCategories();
   }, [categorySlug, enqueueSnackbar]);
 
-  // Fetch products based on filters
+  // Update the API call to fetch products based on search
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        let url = `${import.meta.env.VITE_API_URL}/products`;
-        
-        // If gender is selected, use the gender-specific endpoint
-        if (filters.gender) {
-          url = `${import.meta.env.VITE_API_URL}/products/gender/${filters.gender}`;
-        }
-        // If category is selected, use the category-specific endpoint
-        else if (filters.category) {
-          url = `${import.meta.env.VITE_API_URL}/products/category/${filters.category}`;
-        }
-        
-        // Build query parameters for other filters
+        let url = `${import.meta.env.VITE_API_URL}/products/search`;
+
+        // Build query parameters for filters
         const params = new URLSearchParams();
+        if (filters.category) params.append("category", filters.category);
         if (filters.minPrice) params.append("minPrice", filters.minPrice);
         if (filters.maxPrice) params.append("maxPrice", filters.maxPrice);
-        if (filters.search) params.append("search", filters.search);
-        
-        // Add date filter to ensure we get the most recent products
-        params.append("sort", "createdAt");
-        params.append("order", "desc");
-        
+        if (filters.gender) params.append("gender", filters.gender);
+        if (filters.search) params.append("query", filters.search);
+
         const queryString = params.toString();
         if (queryString) {
           url += `?${queryString}`;
+        }else if (filters.category) {
+          url = `${import.meta.env.VITE_API_URL}/products/category/${filters.category}`;
         }
-        
+
         const response = await axios.get(url);
         setProducts(response.data.data);
       } catch (error) {
-        enqueueSnackbar("Không thể tải sản phẩm", { variant: "error" });
+        // enqueueSnackbar("Không thể tải sản phẩm", { variant: "error" });
+        return [];
       } finally {
         setLoading(false);
       }
     };
 
     fetchProducts();
-    
+
     // Update URL params
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {

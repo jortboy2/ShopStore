@@ -10,6 +10,9 @@ const OrderManagement = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchId, setSearchId] = useState("");
+  const itemsPerPage = 10;
   const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
@@ -102,6 +105,23 @@ const OrderManagement = () => {
     }
   };
 
+  const filteredOrders = searchId
+    ? orders.filter(order => order._id.includes(searchId))
+    : orders;
+
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -113,6 +133,16 @@ const OrderManagement = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Quản lý đơn hàng</h1>
+
+      <div className="flex justify-between items-center mb-4">
+        <input
+          type="text"
+          placeholder="Tìm theo mã đơn hàng"
+          value={searchId}
+          onChange={(e) => setSearchId(e.target.value)}
+          className="border border-gray-300 rounded px-4 py-2"
+        />
+      </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
@@ -142,7 +172,7 @@ const OrderManagement = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {orders.map((order) => (
+            {paginatedOrders.map((order) => (
               <tr key={order._id}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">
@@ -201,6 +231,26 @@ const OrderManagement = () => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="flex justify-between items-center mt-4">
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Trang trước
+        </button>
+        <span>
+          Trang {currentPage} / {totalPages}
+        </span>
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Trang sau
+        </button>
       </div>
 
       {/* Order Detail Modal */}
@@ -331,4 +381,4 @@ const OrderManagement = () => {
   );
 };
 
-export default OrderManagement; 
+export default OrderManagement;

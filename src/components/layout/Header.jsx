@@ -14,6 +14,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
@@ -71,12 +72,29 @@ const Header = () => {
     };
   }, []);
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/products?search=${searchQuery}`);
-      setIsSearchOpen(false);
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/products?search=${searchQuery}`);
+        const data = await response.json();
+        if (data.success) {
+          setSearchResults(data.products);
+        } else {
+          setSearchResults([]);
+        }
+      } catch (error) {
+        console.error("Error fetching search results:", error);
+        setSearchResults([]);
+      }
+    } else {
+      setSearchResults([]);
     }
+  };
+
+  const handleProductClick = (productId) => {
+    setSearchResults([]); // Clear dropdown
+    navigate(`/products/${productId}`);
   };
 
   const handleLogout = () => {
@@ -145,6 +163,24 @@ const Header = () => {
               >
                 <FaSearch />
               </button>
+              {searchResults.length > 0 && (
+                <div className="absolute left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg mt-2 z-50">
+                  {searchResults.map((product) => (
+                    <div
+                      key={product.id}
+                      className="flex items-center p-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => handleProductClick(product.id)}
+                    >
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-10 h-10 object-cover rounded mr-2"
+                      />
+                      <span className="text-gray-700">{product.name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </form>
           </div>
 
