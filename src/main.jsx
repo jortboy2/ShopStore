@@ -23,6 +23,7 @@ import OrderDetail from "./page/OrderDetail.jsx";
 import Orders from "./page/Orders.jsx";
 import User from "./page/admin/User.jsx";
 import Promocode from "./page/admin/Promocode.jsx";
+import AdminChat from "./components/Admin/AdminChat.jsx";
 const router = createBrowserRouter([
   // Public routes with RootLayout
   {
@@ -91,7 +92,10 @@ const router = createBrowserRouter([
         path: "products",
         element: <Product />,
       },
-
+      {
+        path: "chat",
+        element: <AdminChat />
+      },
       {
         path: "categories",
         element: <Categories />,

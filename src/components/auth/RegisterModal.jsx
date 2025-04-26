@@ -69,7 +69,7 @@ const RegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
       const response = await axios.post(
         "http://localhost:5000/api/auth/register",
         {
-          name: formData.name,
+          username: formData.name,
           email: formData.email,
           phone: formData.phone,
           password: formData.password,

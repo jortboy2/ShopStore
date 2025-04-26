@@ -16,6 +16,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaShoppingCart,
+  FaFacebookMessenger,
 } from "react-icons/fa";
 
 const AdminLayout = () => {
@@ -57,6 +58,7 @@ const AdminLayout = () => {
     { title: "Danh Mục", icon: <FaTags />, path: "/admin/categories" },
     { title: "Đơn Hàng", icon: <FaShoppingCart />, path: "/admin/orders" },
     { title: "Mã Giảm Giá", icon: <FaTags />, path: "/admin/promocodes" },
+    { title: "Tin nhắn", icon: <FaFacebookMessenger />, path: "/admin/chat" },
   ];
 
   return (
